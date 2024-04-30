@@ -1,0 +1,106 @@
+---
+title: "Halving_Analysis"
+author: "yogesh sahu"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+
+
+```{r}
+library(readr)
+df_periods<- read_csv("~/GitHub/EDA_Crypto/EDA_Crypto/df_periods.csv")
+# If your 'Start_Date' and 'End_Date' are not in Date format, convert them
+df_periods$Start_Date <- as.Date(df_periods$Start_Date, format="%d/%m/%Y")
+df_periods$End_Date <- as.Date(df_periods$End_Date, format="%d/%m/%Y")
+
+```
+```{r}
+# Number of days
+df_periods$days <- as.integer(df_periods$End_Date - df_periods$Start_Date)
+
+# Number of weeks, assuming a week is 7 days
+df_periods$weeks <- df_periods$days / 7
+
+# Number of months, assuming an average month is roughly 30.44 days (365/12)
+df_periods$months <- df_periods$days / 30.44
+
+# Number of quarters, assuming a quarter is roughly 91.31 days (365/4)
+df_periods$quarters <- df_periods$days / 91.31
+
+# Number of years, assuming a year is 365 days
+df_periods$years <- df_periods$days / 365
+
+# You can round the values to the desired precision, for example:
+df_periods$weeks <- round(df_periods$weeks, 0)
+df_periods$months <- round(df_periods$months, 0)
+df_periods$quarters <- round(df_periods$quarters, 0)
+df_periods$years <- round(df_periods$years, 0)
+
+# Check the updated data frame
+print(df_periods)
+
+```
+```{r}
+# Update the last entry in the 'Halving' column
+df_periods[nrow(df_periods), 'Halving'] <- '2024 Halving'
+
+# Check the updated data frame
+print(df_periods)
+
+```
+
+
+```{r}
+# Assuming df_periods is your data frame
+df_periods$Code <- with(df_periods, paste0(
+  ifelse(Period == "Pre-Bull", "PB", 
+    ifelse(Period == "Crypto Winter", "CW", 
+      ifelse(Period == "Bull Run", "BR", 
+        ifelse(Period == "Halving Day", "HD", "")))), 
+  substr(Halving, 1, 4)
+))
+
+# Let's see the modified data frame
+print(df_periods)
+
+```
+
+
+```{r Write to Csv}
+HalvingDatesKey<-df_periods
+write.csv(HalvingDatesKey, "HalvingDataKey.csv", row.names = FALSE)
+```
+
+```{r Load MasterCrypto}
+library(readr)
+MasterCrypto <- read_csv("Crypto_Hist_LogRt.csv")
+
+```
+```{r}
+library(fuzzyjoin)
+
+# Assuming the date format needs to be converted in both data frames
+MasterCrypto$date <- as.Date(MasterCrypto$date, format="%Y-%m-%d")
+
+# Assuming df_periods already loaded from earlier steps, format its dates if not done already
+df_periods$Start_Date <- as.Date(df_periods$Start_Date, format="%Y-%m-%d")
+df_periods$End_Date <- as.Date(df_periods$End_Date, format="%Y-%m-%d")
+
+```
+
+```{r}
+library(fuzzyjoin)
+library(dplyr)
+
+# Perform a fuzzy join based on date ranges
+df_merged <- fuzzy_left_join(MasterCrypto, df_periods,
+                             by = c("date" = "Start_Date", "date" = "End_Date"),
+                             match_fun = list(`>=`, `<=`))
+
+# After the join, select all columns from MasterCrypto and the Code column from df_periods
+df_merged <- df_merged %>%
+  select(all_of(names(MasterCrypto)), Code = Code)
+```
+
+

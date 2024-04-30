@@ -1,0 +1,307 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+```{r include=FALSE}
+library(ggplot2)  # for visualization
+library(dplyr)    # for data manipulation
+library(tidyr)    # for data tidying
+library(lubridate)  # for date manipulation
+
+```
+
+```{r include=FALSE}
+#Loaded Data 
+library(readr)
+df<- read_csv("~/GitHub/EDA_Crypto/DATA/crypto_hist.csv")
+
+```
+
+```{r}
+library(readxl)
+key <- read_excel("~/GitHub/CryptoDataFetcher/CryptoDataFetcher2.0/DATA/Keys/MasterDataKey.xlsx")
+
+```
+```{r}
+# Merging the 'rank' column from 'key' into 'df' using 'id' as the key
+df <- df %>%
+  left_join(key %>% select(id, rank), by = "id")
+
+```
+
+```{r}
+str(df)  # Structure of the dataframe
+summary(df)  # Statistical summary of numeric columns
+head(df)  # View the first few rows of the dataframe
+
+```
+
+```{r}
+library(dplyr)
+library(lubridate)
+```
+
+
+```{r}
+df_pa <- df %>%
+  select(Date,id,slug,open, close,market_cap,rank) %>%
+  mutate(
+    pct_change = (close - open) / open * 100, # Percentage change
+    log_return = log(close / open) # Logarithmic return
+  )
+
+```
+
+```{r}
+head(df_pa)
+```
+
+
+```{r}
+library(ggplot2)
+library(dplyr)
+
+# First, make sure that the Date column is of the Date class and not character.
+df_pa$Date <- as.Date(df_pa$Date, format = "%d/%m/%Y")  # Adjust format if needed.
+
+# Filter for Bitcoin and Ethereum only
+df_pa_filtered <- df_pa %>%
+  filter(slug %in% c("bitcoin", "ethereum"))
+
+# Create the plot
+btc_eth_plot <- ggplot(df_pa_filtered, aes(x = Date, y = pct_change, group = slug)) +
+  geom_line(aes(color = slug), size = 1, alpha = 0.5) +  # Set opacity to 50%
+  scale_color_manual(values = c("bitcoin" = "yellow", "ethereum" = "purple")) +
+  theme_minimal(base_size = 14) +  # Start with a minimal theme and then customize
+  theme(
+    plot.background = element_rect(fill = "black", color = "black"),  # Set plot background color
+    panel.background = element_rect(fill = "black", color = "black"),  # Set panel background color
+    legend.background = element_rect(fill = "black", color = "black"),  # Set legend background color
+    text = element_text(color = "white"),  # Set text color to white for contrast
+    axis.text = element_text(color = "white"),  # Set axis text color to white
+    axis.title = element_text(color = "white"),  # Set axis title color to white
+    legend.text = element_text(color = "white")  # Set legend text color to white
+  ) +
+  labs(
+    title = "Percentage Change Over Time",
+    subtitle = "Bitcoin and Ethereum",
+    y = "Percentage Change",
+    x = "Date",
+    color = "Cryptocurrency"
+  )
+
+# Print the plot
+btc_eth_plot
+
+library(lubridate)
+library(ggplot2)
+library(dplyr)
+
+# Aggregate data by month
+df_pa_month <- df_pa_filtered %>%
+  mutate(Month = floor_date(Date, "month")) %>%
+  group_by(slug, Month) %>%
+  summarize(pct_change = mean(pct_change, na.rm = TRUE), .groups = 'drop')
+
+# Plot
+ggplot(df_pa_month, aes(x = Month, y = pct_change, group = slug, color = slug)) +
+  geom_line(size = 1, alpha = 0.5) +
+  scale_color_manual(values = c("bitcoin" = "yellow", "ethereum" = "purple")) +
+  theme_dark(base_size = 14) +
+  theme(
+    plot.background = element_rect(fill = "black", color = "black"),
+    panel.background = element_rect(fill = "black", color = "black"),
+    text = element_text(color = "white"),
+    axis.text = element_text(color = "white"),
+    axis.title = element_text(color = "white"),
+    legend.text = element_text(color = "white")
+  ) +
+  labs(title = "Monthly Percentage Change", x = "Month", y = "Avg. Percentage Change", color = "Cryptocurrency")
+
+
+# Aggregate data by quarter
+df_pa_quarter <- df_pa_filtered %>%
+  mutate(Quarter = floor_date(Date, "quarter")) %>%
+  group_by(slug, Quarter) %>%
+  summarize(pct_change = mean(pct_change, na.rm = TRUE), .groups = 'drop')
+
+# Plot
+ggplot(df_pa_quarter, aes(x = Quarter, y = pct_change, group = slug, color = slug)) +
+  geom_line(size = 1, alpha = 0.5) +
+  scale_color_manual(values = c("bitcoin" = "yellow", "ethereum" = "purple")) +
+  theme_dark(base_size = 14) +
+  theme(
+    plot.background = element_rect(fill = "black", color = "black"),
+    panel.background = element_rect(fill = "black", color = "black"),
+    text = element_text(color = "white"),
+    axis.text = element_text(color = "white"),
+    axis.title = element_text(color = "white"),
+    legend.text = element_text(color = "white")
+  ) +
+  labs(title = "Quarterly Percentage Change", x = "Quarter", y = "Avg. Percentage Change", color = "Cryptocurrency")
+
+```
+```{r}
+library(ggplot2)
+library(dplyr)
+library(lubridate)
+
+# Function to create and return a plot
+create_time_aggregated_plot <- function(data, time_unit, title_suffix) {
+  # Aggregate data based on the specified time unit
+  aggregated_data <- data %>%
+    mutate(Time = floor_date(Date, unit = time_unit)) %>%
+    group_by(slug, Time) %>%
+    summarize(pct_change = mean(pct_change, na.rm = TRUE), .groups = 'drop')
+
+  # Generate the plot
+  plot <- ggplot(aggregated_data, aes(x = Time, y = pct_change, group = slug, color = slug)) +
+    geom_line(size = 1, alpha = 0.5) +
+    scale_color_manual(values = c("bitcoin" = "yellow", "ethereum" = "purple")) +
+    theme_dark(base_size = 14) +
+    theme(
+      plot.background = element_rect(fill = "black", color = "grey"),
+      panel.background = element_rect(fill = "black", color = "grey"),
+      text = element_text(color = "white"),
+      axis.text = element_text(color = "white"),
+      axis.title = element_text(color = "white"),
+      legend.text = element_text(color = "black")
+    ) +
+    labs(title = paste(title_suffix, "Percentage Change"), x = toupper(time_unit), y = "Avg. Percentage Change", color = "Cryptocurrency")
+
+  return(plot)
+}
+
+# Make sure the Date column is of the Date class
+df_pa$Date <- as.Date(df_pa$Date, format = "%d/%m/%Y")
+
+# Filter for Bitcoin and Ethereum only
+df_pa_filtered <- df_pa %>%
+  filter(slug %in% c("bitcoin", "ethereum"))
+
+# Create the plots
+monthly_plot <- create_time_aggregated_plot(df_pa_filtered, "month", "Monthly")
+quarterly_plot <- create_time_aggregated_plot(df_pa_filtered, "quarter", "Quarterly")
+weekday_plot <- create_time_aggregated_plot(df_pa_filtered, "day", "Daily")
+
+# Print the plots (you can print them one at a time to check or save them)
+print(monthly_plot)
+print(quarterly_plot)
+print(weekday_plot)
+
+```
+
+```{r}
+library(ggplot2)
+library(dplyr)
+library(lubridate)
+
+# Function to create and return a plot with aggregated data
+create_aggregated_plot <- function(data, time_unit) {
+  # Modify data based on the specified time unit
+  if (time_unit == "quarter") {
+    data <- data %>%
+      mutate(Time = paste0("Q", quarter(Date)))  # Q1, Q2, Q3, Q4 for all years combined
+  } else if (time_unit == "month") {
+    data <- data %>%
+      mutate(Time = month(Date, label = TRUE, abbr = TRUE))  # Jan, Feb, Mar, etc. for all years combined
+  } else if (time_unit == "day") {
+    data <- data %>%
+      mutate(Time = wday(Date, label = TRUE, abbr = TRUE))  # Mon, Tue, Wed, etc. for all years combined
+  }
+
+  # Aggregate the data by new time unit and calculate mean percentage change
+  aggregated_data <- data %>%
+    group_by(slug, Time) %>%
+    summarize(pct_change = mean(pct_change, na.rm = TRUE), .groups = 'drop')
+
+  # Generate the plot
+  plot <- ggplot(aggregated_data, aes(x = Time, y = pct_change, group = slug, color = slug)) +
+    geom_line(size = 1, alpha = 0.5) +
+    scale_color_manual(values = c("bitcoin" = "yellow", "ethereum" = "purple")) +
+    theme_dark(base_size = 14) +
+    theme(
+      plot.background = element_rect(fill = "black", color = "black"),
+      panel.background = element_rect(fill = "black", color = "black"),
+      legend.background = element_rect(fill = "black", color = "black"),
+      legend.key = element_rect(fill = "black", color = "black"),
+      text = element_text(color = "white"),
+      axis.text = element_text(color = "white"),
+      axis.title = element_text(color = "white"),
+      legend.text = element_text(color = "white")
+    ) +
+    labs(title = paste("Aggregated", toupper(time_unit), "Percentage Change"), x = toupper(time_unit), y = "Avg. Percentage Change", color = "Cryptocurrency")
+
+  return(plot)
+}
+
+# Make sure the Date column is of the Date class
+df_pa$Date <- as.Date(df_pa$Date, format = "%d/%m/%Y")
+
+# Filter for Bitcoin and Ethereum only
+df_pa_filtered <- df_pa %>%
+  filter(slug %in% c("bitcoin", "ethereum"))
+
+# Create the plots
+quarterly_plot <- create_aggregated_plot(df_pa_filtered, "quarter")
+monthly_plot <- create_aggregated_plot(df_pa_filtered, "month")
+weekday_plot <- create_aggregated_plot(df_pa_filtered, "day")
+
+# Print the plots (you can print them one at a time to check or save them)
+print(quarterly_plot)
+print(monthly_plot)
+print(weekday_plot)
+
+
+```
+```{r}
+library(ggplot2)
+library(dplyr)
+library(lubridate)
+
+# Ensure the Date column is of the Date class
+df_pa$Date <- as.Date(df_pa$Date, format = "%d/%m/%Y")
+
+# Filter for Bitcoin and Ethereum only and prepare data for gains and losses
+df_pa_filtered <- df_pa %>%
+  filter(slug %in% c("bitcoin", "ethereum")) %>%
+  mutate(
+    ChangeType = ifelse(pct_change >= 0, "Gain", "Loss")
+  )
+
+# Create the plot
+plot <- ggplot(df_pa_filtered, aes(x = Date, y = pct_change, group = interaction(slug, ChangeType), color = interaction(slug, ChangeType))) +
+  geom_line(size = .06, alpha = 0.5) +
+  scale_color_manual(values = c("bitcoin.Gain" = "gold", "ethereum.Gain" = "purple",
+                                "bitcoin.Loss" = "red", "ethereum.Loss" = "blue")) +
+  scale_y_continuous(
+    name = "Percentage Change",
+    limits = c(-35, 35),  # Set y-axis limits from -100 to +100
+    breaks = seq(-35, 35, by = 20)  # Set y-axis breaks
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    plot.background = element_rect(fill = "black", color = "black"),
+    panel.background = element_rect(fill = "black", color = "black"),
+    legend.background = element_rect(fill = "black", color = "black"),
+    legend.key = element_rect(fill = "black", color = "black"),
+    text = element_text(color = "white"),
+    axis.text = element_text(color = "white"),
+    axis.title = element_text(color = "white"),
+    legend.text = element_text(color = "white")
+  ) +
+  labs(
+    title = "Bitcoin and Ethereum Price Changes",
+    subtitle = "Positive and Negative Changes",
+    y = "Percentage Change",
+    x = "Date",
+    color = "Type"
+  )
+
+# Print the plot
+print(plot)
+
+
+```
+
+

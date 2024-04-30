@@ -1,0 +1,72 @@
+---
+title: "CryptoSegmentation"
+author: "yogesh sahu"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r Load Data, include=FALSE}
+library (readr)
+df<- read_csv("~/GitHub/EDA_Crypto/DATA/crypto_hist.csv")
+df_lgrtdf<- read_csv("~/GitHub/EDA_Crypto/EDA_Crypto/Crypto_Hist_LogRt.csv")
+```
+
+```{r Categorize Market Cap, include=FALSE}
+# Convert market_cap to numeric if not already
+df_lgrtdf$market_cap <- as.numeric(df_lgrtdf$market_cap)
+
+# Define the breaks for market cap
+breaks <- c(0, 50e6, 100e6, 500e6, 1e9, 10e9, 50e9, 100e9, 200e9, 500e9, 1e12, Inf)  # Ends are inclusive
+
+# Label for each segment
+labels <- c("Under 50M", "Under 100M", "Under 500M", "Under 1B", "Under 10B", "Under 50B", 
+            "Under 100B", "Under 200B", "Under 500B", "Under 1T", "Above 1T")
+
+# Create a new column for market cap category
+df_lgrtdf$market_cap_category <- cut(df_lgrtdf$market_cap, breaks = breaks, labels = labels, include.lowest = TRUE)
+
+# Print out to check the categorized data
+head(df_lgrtdf)
+
+```
+
+```{r dftest to save load time}
+# Load the dplyr package if not already loaded
+library(dplyr)
+
+# Set a seed for reproducibility
+set.seed(123)
+
+# Sample a subset of the data for quick testing - 10% of the data
+df_test <- df_lgrtdf %>% 
+  sample_frac(0.01)  # Taking 10% of the data
+
+# You can check the size of your test data frame
+print(nrow(df_test))
+
+```
+```{r test chartc for  log}
+# Now use this smaller dataset to create the highcharter object
+library(highcharter)
+
+highchart <- hchart(df_test, "scatter",
+                    hcaes(x = log_return, y = market_cap, group = market_cap_category),
+                    marker = list(radius = 2)) %>%
+  hc_title(text = "Interactive Highchart: Market Cap vs. Log Return (Test Version)") %>%
+  hc_xAxis(title = list(text = "Log Return")) %>%
+  hc_yAxis(title = list(text = "Market Capitalization"),
+           type = "logarithmic") %>%
+  hc_add_theme(hc_theme_flat())
+
+# Print the highchart object
+highchart
+```
+
+
+
+
+
+
+
+
+

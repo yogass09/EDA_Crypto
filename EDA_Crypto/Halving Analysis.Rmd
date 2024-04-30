@@ -1,0 +1,48 @@
+---
+title: "Halving"
+author: "yogesh sahu"
+date: "`r Sys.Date()`"
+output: html_document
+---
+```{r}
+# Define Halving Dates including the projected 2024 halving
+halving_dates <- as.Date(c("2014-07-09", "2016-07-09", "2020-05-11", "2024-04-20"))
+names(halving_dates) <- c("2014 Halving", "2016 Halving", "2020 Halving", "2024 Halving")
+
+# Function to define periods around each halving date
+define_periods <- function(halving_date) {
+  pre_bull_start <- halving_date - 270            # Starts 9 months before halving
+  pre_bull_end <- halving_date - 1                # Ends the day before halving
+  halving_day <- halving_date                     # The day of halving
+  bull_run_start <- halving_date + 1              # Starts the day after halving
+  bull_run_end <- halving_date + 540              # Lasts 18 months
+  crypto_winter_start <- bull_run_end + 1         # Starts immediately after Bull Run
+  crypto_winter_end <- bull_run_end + 720         # Lasts 24 months
+
+  data.frame(
+    Period = c("Pre-Bull", "Halving Day", "Bull Run", "Crypto Winter"),
+    Start_Date = c(pre_bull_start, halving_day, bull_run_start, crypto_winter_start),
+    End_Date = c(pre_bull_end, halving_day, bull_run_end, crypto_winter_end)
+  )
+}
+
+# Apply the function to each halving date and combine the results into a single data frame
+period_dfs <- lapply(halving_dates, define_periods)
+all_periods_df <- do.call(rbind, period_dfs)
+
+# Split the combined data frame into separate ones for each period
+period_dfs_list <- split(all_periods_df, all_periods_df$Period)
+PreBull <- period_dfs_list$`Pre-Bull`
+HalvingDay <- period_dfs_list$`Halving Day`
+BullRun <- period_dfs_list$`Bull Run`
+CryptoWinter <- period_dfs_list$`Crypto Winter`
+
+# Verify the data frames by printing
+print(PreBull)
+print(HalvingDay)
+print(BullRun)
+print(CryptoWinter)
+
+```
+
+
