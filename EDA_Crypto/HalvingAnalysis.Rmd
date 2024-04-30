@@ -102,5 +102,11 @@ df_merged <- fuzzy_left_join(MasterCrypto, df_periods,
 df_merged <- df_merged %>%
   select(all_of(names(MasterCrypto)), Code = Code)
 ```
+```{r}
+Crypto_Hist_Ret_Log_Rank_Code <- df_merged
+```
 
+```{r}
+#write.csv(Crypto_Hist_Ret_Log_Rank_Code, "Crypto_Hist_Ret_Log_Rank_Code.csv", row.names = FALSE)
+```
 

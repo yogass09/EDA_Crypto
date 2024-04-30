@@ -131,7 +131,6 @@ sum(is.infinite(df_selected$log_ret))
 ```{r Drop Na/Inf}
 # Remove rows with any NA values from df_selected
 df_selected <- na.omit(df_selected)
-
 ```
 
 
@@ -141,7 +140,7 @@ CryptoHistRt<-df_selected
 
 
 ```{r}
-write.csv(df_selected, "Crypto_Hist_LogRt.csv", row.names = FALSE)
+#write.csv(df_selected, "Crypto_Hist_LogRt.csv", row.names = FALSE)
 ```
 
 ```{r making new df by transposing log ret and ret}
