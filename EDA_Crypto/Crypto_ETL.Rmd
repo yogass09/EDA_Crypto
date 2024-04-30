@@ -1,0 +1,734 @@
+---
+title: "Crypto_EDA_FeautureEngg"
+author: "yogesh sahu"
+date: "`r Sys.date()`"
+output: pdf_document
+editor_options: 
+  chunk_output_type: inline
+---
+
+# Load Data and Extract Data Based on Price Action Analysis
+
+```{r Libraries include=FALSE}
+library(ggplot2)  # for visualization
+library(dplyr)    # for data manipulation
+library(tidyr)    # for data tidying
+library(lubridate)  # for date manipulation
+library(readxl)
+library(readr)
+library(dplyr)
+library(lubridate)
+library(ggplot2)
+library(ggplot2)
+library(dplyr)
+library(lubridate)
+
+```
+
+```{r Loaded Data ,include=FALSE}
+#Loaded Data 
+df<- read_csv("~/GitHub/EDA_Crypto/DATA/crypto_hist.csv")
+
+key <- read_excel("~/GitHub/CryptoDataFetcher/CryptoDataFetcher2.0/DATA/Keys/MasterDataKey.xlsx")
+
+# Merging the 'rank' column from 'key' into 'df' using 'id' as the key
+df <- df %>%
+  left_join(key %>% select(id, rank), by = "id")
+
+str(df)  # Structure of the dataframe
+summary(df)  # Statistical summary of numeric columns
+head(df)  # View the first few rows of the dataframe
+```
+
+```{r Price action Data creation}
+df_pa <- df %>%
+  select(date,id,slug,open, close,market_cap,rank) %>%
+  mutate(
+    pct_change = (close - open) / open * 100, # Percentage change
+    log_return = log(close / open) # Logarithmic return
+  )
+#head(df_pa)
+```
+
+```{r Plot mom qoq }
+# First, make sure that the date column is of the date class and not character.
+df_pa$date <- as.Date(df_pa$date, format = "%d/%m/%Y")
+
+# Filter for Bitcoin and Ethereum only
+df_pa_filtered <- df_pa %>%
+  filter(slug %in% c("bitcoin", "ethereum"))
+
+# Create the plot
+btc_eth_plot <- ggplot(df_pa_filtered, aes(x = date, y = pct_change, group = slug)) +
+  geom_line(aes(color = slug), size = 1, alpha = 0.5) +  # Set opacity to 50%
+  scale_color_manual(values = c("bitcoin" = "yellow", "ethereum" = "purple")) +
+  theme_minimal(base_size = 14) +  # Start with a minimal theme and then customize
+  theme(
+    plot.background = element_rect(fill = "black", color = "black"),  # Set plot background color
+    panel.background = element_rect(fill = "black", color = "black"),  # Set panel background color
+    legend.background = element_rect(fill = "black", color = "black"),  # Set legend background color
+    text = element_text(color = "white"),  # Set text color to white for contrast
+    axis.text = element_text(color = "white"),  # Set axis text color to white
+    axis.title = element_text(color = "white"),  # Set axis title color to white
+    legend.text = element_text(color = "white")  # Set legend text color to white
+  ) +
+  labs(
+    title = "Percentage Change Over Time",
+    subtitle = "Bitcoin and Ethereum",
+    y = "Percentage Change",
+    x = "date",
+    color = "Cryptocurrency"
+  )
+
+# Print the plot
+btc_eth_plot
+
+library(lubridate)
+library(ggplot2)
+library(dplyr)
+
+# Aggregate data by month
+df_pa_month <- df_pa_filtered %>%
+  mutate(Month = floor_date(date, "month")) %>%
+  group_by(slug, Month) %>%
+  summarize(pct_change = mean(pct_change, na.rm = TRUE), .groups = 'drop')
+
+# Plot
+ggplot(df_pa_month, aes(x = Month, y = pct_change, group = slug, color = slug)) +
+  geom_line(size = 1, alpha = 0.5) +
+  scale_color_manual(values = c("bitcoin" = "yellow", "ethereum" = "purple")) +
+  theme_dark(base_size = 14) +
+  theme(
+    plot.background = element_rect(fill = "black", color = "black"),
+    panel.background = element_rect(fill = "black", color = "black"),
+    text = element_text(color = "white"),
+    axis.text = element_text(color = "white"),
+    axis.title = element_text(color = "white"),
+    legend.text = element_text(color = "white")
+  ) +
+  labs(title = "Monthly Percentage Change", x = "Month", y = "Avg. Percentage Change", color = "Cryptocurrency")
+
+
+# Aggregate data by quarter
+df_pa_quarter <- df_pa_filtered %>%
+  mutate(Quarter = floor_date(date, "quarter")) %>%
+  group_by(slug, Quarter) %>%
+  summarize(pct_change = mean(pct_change, na.rm = TRUE), .groups = 'drop')
+
+# Plot
+ggplot(df_pa_quarter, aes(x = Quarter, y = pct_change, group = slug, color = slug)) +
+  geom_line(size = 1, alpha = 0.5) +
+  scale_color_manual(values = c("bitcoin" = "yellow", "ethereum" = "purple")) +
+  theme_dark(base_size = 14) +
+  theme(
+    plot.background = element_rect(fill = "black", color = "black"),
+    panel.background = element_rect(fill = "black", color = "black"),
+    text = element_text(color = "white"),
+    axis.text = element_text(color = "white"),
+    axis.title = element_text(color = "white"),
+    legend.text = element_text(color = "white")
+  ) +
+  labs(title = "Quarterly Percentage Change", x = "Quarter", y = "Avg. Percentage Change", color = "Cryptocurrency")
+
+```
+
+```{r agg plot mom dod qoq}
+
+# Function to create and return a plot with aggregated data
+create_aggregated_plot <- function(data, time_unit) {
+  # Modify data based on the specified time unit
+  if (time_unit == "quarter") {
+    data <- data %>%
+      mutate(Time = paste0("Q", quarter(date)))  # Q1, Q2, Q3, Q4 for all years combined
+  } else if (time_unit == "month") {
+    data <- data %>%
+      mutate(Time = month(date, label = TRUE, abbr = TRUE))  # Jan, Feb, Mar, etc. for all years combined
+  } else if (time_unit == "day") {
+    data <- data %>%
+      mutate(Time = wday(date, label = TRUE, abbr = TRUE))  # Mon, Tue, Wed, etc. for all years combined
+  }
+
+  # Aggregate the data by new time unit and calculate mean percentage change
+  aggregated_data <- data %>%
+    group_by(slug, Time) %>%
+    summarize(pct_change = mean(pct_change, na.rm = TRUE), .groups = 'drop')
+
+  # Generate the plot
+  plot <- ggplot(aggregated_data, aes(x = Time, y = pct_change, group = slug, color = slug)) +
+    geom_line(size = 1, alpha = 0.5) +
+    scale_color_manual(values = c("bitcoin" = "yellow", "ethereum" = "purple")) +
+    theme_dark(base_size = 14) +
+    theme(
+      plot.background = element_rect(fill = "black", color = "black"),
+      panel.background = element_rect(fill = "black", color = "black"),
+      legend.background = element_rect(fill = "black", color = "black"),
+      legend.key = element_rect(fill = "black", color = "black"),
+      text = element_text(color = "white"),
+      axis.text = element_text(color = "white"),
+      axis.title = element_text(color = "white"),
+      legend.text = element_text(color = "white")
+    ) +
+    labs(title = paste("Aggregated", toupper(time_unit), "Percentage Change"), x = toupper(time_unit), y = "Avg. Percentage Change", color = "Cryptocurrency")
+
+  return(plot)
+}
+
+# Make sure the date column is of the date class
+#df_pa$date <- as.date(df_pa$date, format = "%d/%m/%Y")
+
+# Filter for Bitcoin and Ethereum only
+df_pa_filtered <- df_pa %>%
+  filter(slug %in% c("bitcoin", "ethereum"))
+
+# Create the plots
+quarterly_plot <- create_aggregated_plot(df_pa_filtered, "quarter")
+monthly_plot <- create_aggregated_plot(df_pa_filtered, "month")
+weekday_plot <- create_aggregated_plot(df_pa_filtered, "day")
+
+# Print the plots (you can print them one at a time to check or save them)
+print(quarterly_plot)
+print(monthly_plot)
+print(weekday_plot)
+
+
+```
+
+# Transform close to returns and log returns
+
+```{r Libraries}
+library(ggplot2)  # for visualization
+library(dplyr)    # for data manipulation
+library(tidyr)    # for data tidying
+library(lubridate)  # for date manipulation
+library(readr)
+library(dplyr)
+
+```
+
+```{r datafile, include=FALSE}
+
+df<- read_csv("~/GitHub/EDA_Crypto/DATA/crypto_hist.csv")
+```
+
+```{r dropping 0 close prices}
+# Subset df_selected to exclude rows where 'close' equals 0
+df <- df[df$close > 0.02, ]
+
+# Check the structure or a summary of the updated data frame
+str(df)
+```
+
+```{r load key}
+library(readxl)
+key <- read_excel("~/GitHub/CryptoDataFetcher/CryptoDataFetcher2.0/DATA/Keys/MasterDataKey.xlsx")
+```
+
+```{r merge key for future ref}
+# Merging the 'rank' column from 'key' into 'df' using 'id' as the key
+df <- df %>%
+  left_join(key %>% select(id, rank), by = "id")
+```
+
+```{r test view}
+str(df)  # Structure of the dataframe
+summary(df)  # Statistical summary of numeric columns
+head(df)  # View the first few rows of the dataframe
+```
+
+```{r selecting relevant col}
+library(dplyr)
+
+# Assuming your dataframe is named df
+df_selected <- df %>%
+  select(slug, symbol, date, open, close, market_cap, rank)
+
+# Convert 'date' from character to Date format if necessary
+df_selected$date <- as.Date(df_selected$date, format = "%d/%m/%Y")
+
+# View the first few rows of the new dataframe to confirm the extraction
+print(head(df_selected))
+```
+
+```{r Grouped Pct Change}
+
+# Load the dplyr package if not already loaded
+library(dplyr)
+
+df_selected <- df_selected %>%
+  group_by(symbol) %>%
+  mutate(ret = round((close - open) / open, 2))  %>%  # Calculate and round the ret
+  ungroup()  # Remove the grouping specification for further general operations
+
+
+df_selected <- df_selected %>%
+  group_by(symbol) %>%
+  mutate(
+    ret = round((close - open) / open, 2),  # Calculate and round the ret
+    # Directly calculate cumulative ret without creating adjusted_ret column
+    cum_ret = cumprod(1 + ret) - 1
+  ) %>%
+  ungroup()  # Remove the grouping specification for further general operations
+
+# Optionally, round cum_ret to 2 decimal places if needed for consistency
+df_selected$cum_ret <- round(df_selected$cum_ret, 2)
+
+
+
+# Print the updated data frame
+print(df_selected)
+```
+
+```{r log_ret}
+
+# Calculate the logarithmic ret, grouped by symbol if necessary for other analyses
+df_selected <- df_selected %>%
+  group_by(symbol) %>%
+  mutate(log_ret = log(close / open)) %>%  # Calculate log ret as log(close/open)
+  ungroup()  # optional: ungroup after the mutation if no further grouped operations
+
+# Assuming df_selected already includes the 'log_ret' calculations
+df_selected <- df_selected %>%
+  group_by(symbol) %>%
+  arrange(date) %>%  # Ensure the data is sorted by date
+  mutate(
+    cum_log_ret = cumsum(log_ret)  # Calculate cumulative logarithmic ret
+  ) %>%
+  ungroup()  # Optional: ungroup if no further grouped operations are needed
+
+# Optionally, round cum_ret to 2 decimal places if needed for consistency
+df_selected$log_ret <- round(df_selected$log_ret, 2)
+# Optionally, round cum_ret to 2 decimal places if needed for consistency
+df_selected$cum_log_ret <- round(df_selected$cum_log_ret, 2)
+
+# Print the updated data frame to verify the results
+print(df_selected)
+
+```
+
+```{r Check for NA/Inf}
+# Check a specific column, e.g., 'log_ret'
+sum(is.na(df_selected$log_ret))
+sum(is.na(df_selected$ret))
+sum(is.infinite(df_selected$log_ret))
+```
+
+```{r Drop Na/Inf}
+# Remove rows with any NA values from df_selected
+df_selected <- na.omit(df_selected)
+```
+
+```{r Drop Na/Inf}
+CryptoHistRt<-df_selected
+CryptoHistRt
+```
+
+```{r}
+#write.csv(df_selected, "Crypto_Hist_LogRt.csv", row.names = FALSE)
+```
+
+```{r making new df by transposing log ret and ret}
+#for later when we have all the other data pct change as well as log date structureed like MoM or DoD
+```
+
+# Halving dates pre n post halving dates
+
+```{r Load Data}
+library(readr)
+library(fuzzyjoin)
+library(fuzzyjoin)
+library(dplyr)
+
+df_periods<- read_csv("~/GitHub/EDA_Crypto/EDA_Crypto/df_periods.csv")
+# If your 'Start_Date' and 'End_Date' are not in Date format, convert them
+df_periods$Start_Date <- as.Date(df_periods$Start_Date, format="%d/%m/%Y")
+df_periods$End_Date <- as.Date(df_periods$End_Date, format="%d/%m/%Y")
+MasterCrypto <- read_csv("Crypto_Hist_LogRt.csv")
+```
+
+```{r}
+# Number of days
+df_periods$days <- as.integer(df_periods$End_Date - df_periods$Start_Date)
+
+# Number of weeks, assuming a week is 7 days
+df_periods$weeks <- df_periods$days / 7
+
+# Number of months, assuming an average month is roughly 30.44 days (365/12)
+df_periods$months <- df_periods$days / 30.44
+
+# Number of quarters, assuming a quarter is roughly 91.31 days (365/4)
+df_periods$quarters <- df_periods$days / 91.31
+
+# Number of years, assuming a year is 365 days
+df_periods$years <- df_periods$days / 365
+
+# You can round the values to the desired precision, for example:
+df_periods$weeks <- round(df_periods$weeks, 0)
+df_periods$months <- round(df_periods$months, 0)
+df_periods$quarters <- round(df_periods$quarters, 0)
+df_periods$years <- round(df_periods$years, 0)
+
+# Check the updated data frame
+print(df_periods)
+
+```
+
+```{r}
+# Update the last entry in the 'Halving' column
+df_periods[nrow(df_periods), 'Halving'] <- '2024 Halving'
+
+# Check the updated data frame
+print(df_periods)
+
+```
+
+```{r}
+# Assuming df_periods is your data frame
+df_periods$Code <- with(df_periods, paste0(
+  ifelse(Period == "Pre-Bull", "PB", 
+    ifelse(Period == "Crypto Winter", "CW", 
+      ifelse(Period == "Bull Run", "BR", 
+        ifelse(Period == "Halving Day", "HD", "")))), 
+  substr(Halving, 1, 4)
+))
+
+# Let's see the modified data frame
+print(df_periods)
+
+```
+
+```{r Write to Csv}
+HalvingDatesKey<-df_periods
+write.csv(HalvingDatesKey, "HalvingDataKey.csv", row.names = FALSE)
+```
+
+
+
+```{r standardize date format}
+# Assuming the date format needs to be converted in both data frames
+MasterCrypto$date <- as.Date(MasterCrypto$date, format="%Y-%m-%d")
+
+# Assuming df_periods already loaded from earlier steps, format its dates if not done already
+df_periods$Start_Date <- as.Date(df_periods$Start_Date, format="%Y-%m-%d")
+df_periods$End_Date <- as.Date(df_periods$End_Date, format="%Y-%m-%d")
+
+```
+
+```{r merge Halving and Master and write to csv}
+
+# Perform a fuzzy join based on date ranges
+df_merged <- fuzzy_left_join(MasterCrypto, df_periods,
+                             by = c("date" = "Start_Date", "date" = "End_Date"),
+                             match_fun = list(`>=`, `<=`))
+
+# After the join, select all columns from MasterCrypto and the Code column from df_periods
+df_merged <- df_merged %>%
+  select(all_of(names(MasterCrypto)), Code = Code)
+
+Crypto_Hist_Ret_Log_Rank_Code <- df_merged
+
+#write.csv(Crypto_Hist_Ret_Log_Rank_Code, "Crypto_Hist_Ret_Log_Rank_Code.csv", row.names = FALSE)
+```
+
+# Market Cap segmentation
+
+
+```{r Load Data, include=FALSE}
+library (readr)
+#df<- read_csv("~/GitHub/EDA_Crypto/DATA/crypto_hist.csv")
+Mcapdf<- read_csv("~/GitHub/EDA_Crypto/EDA_Crypto/Crypto_Hist_Ret_Log_Rank_Code.csv")
+```
+
+```{r Categorize Market Cap, include=FALSE}
+# Convert market_cap to numeric if not already
+Mcapdf$market_cap <- as.numeric(Mcapdf$market_cap)
+
+# Define the breaks for market cap
+breaks <- c(0, 50e6, 100e6, 500e6, 1e9, 10e9, 50e9, 100e9, 200e9, 500e9, 1e12, Inf)  # Ends are inclusive
+
+# Label for each segment
+labels <- c("Under 50M", "Under 100M", "Under 500M", "Under 1B", "Under 10B", "Under 50B", 
+            "Under 100B", "Under 200B", "Under 500B", "Under 1T", "Above 1T")
+
+# Create a new column for market cap category
+Mcapdf$mcapcat<- cut(Mcapdf$market_cap, breaks = breaks, labels = labels, include.lowest = TRUE)
+
+# Print out to check the categorized data
+head(Mcapdf)
+
+```
+
+```{r btc plot}
+library(ggplot2)
+library(dplyr)
+
+# Assuming 'date' is already in a suitable date format, and if not, convert it
+Mcapdf$date <- as.Date(Mcapdf$date)
+
+# Filter the data for bitcoin
+bitcoin_data <- Mcapdf %>%
+  filter(slug == "bitcoin")
+
+# Create a line chart
+p <- ggplot(bitcoin_data, aes(x = date, y = market_cap, group = 1, color = mcapcat)) +
+  geom_line() +
+  scale_x_date(date_breaks = "1 year", date_labels = "%Y") +  # Ensure x-axis labels are years
+  labs(title = "Market Capitalization of Bitcoin Over Time",
+       x = "Year",
+       y = "Market Cap",
+       color = "Market Cap Category") +
+  theme_minimal()  # A clean theme for better visualization
+
+# Print the plot
+print(p)
+
+```
+
+```{r rank wise plots}
+library(ggplot2)
+library(dplyr)
+
+# Ensure 'date' is in a date format
+Mcapdf$date <- as.Date(Mcapdf$date)
+
+# Filter the data for the top 10 ranked cryptocurrencies
+top_10_coins_data <- Mcapdf %>%
+  filter(rank >= 1 & rank <= 20)  # Assuming 'rank' indicates the ranking of the cryptocurrencies
+
+# Create a line chart for the top 10 cryptocurrencies
+p <- ggplot(top_10_coins_data, aes(x = date, y = market_cap, group = slug, color = mcapcat)) +
+  geom_line() +
+  scale_x_date(date_breaks = "1 year", date_labels = "%Y") +  # Ensure x-axis labels are years
+  labs(title = "Market Capitalization of Top 10 Cryptocurrencies Over Time",
+       x = "Year",
+       y = "Market Cap",
+       color = "Market Cap Category") +
+  theme_minimal()  # A clean theme for better visualization
+
+# Print the plot
+print(p)
+
+```
+
+```{r rank wise plots}
+library(ggplot2)
+library(dplyr)
+
+library(ggplot2)
+library(dplyr)
+
+# Ensure 'date' is in a date format
+Mcapdf$date <- as.Date(Mcapdf$date)
+
+# Filter the data for the specified rank ranges and create a categorization variable for faceting
+top_coins_data <- Mcapdf %>%
+  filter(rank >= 1 & rank <= 1000) %>%
+  mutate(rank_category = case_when(
+    rank >= 1 & rank <= 10 ~ "Rank 1-10",
+    rank >= 20 & rank <= 100 ~ "Rank 20-100",
+    rank >= 100 & rank <= 350 ~ "Rank 100-350",
+    rank >= 350 & rank <= 1000 ~ "Rank 350-1000"
+  )) %>%
+  filter(!is.na(rank_category))  # Ensure only valid categories are included
+
+# Create a line chart with facets for each rank category
+p <- ggplot(top_coins_data, aes(x = date, y = market_cap, group = slug, color = mcapcat)) +
+  geom_line() +
+  scale_x_date(date_breaks = "1 year", date_labels = "%Y") +  # Format the x-axis labels as years
+  labs(title = "Market Capitalization of Cryptocurrencies Over Time by Rank Category",
+       x = "Year",
+       y = "Market Cap",
+       color = "Market Cap Category") +
+  facet_wrap(~ rank_category, scales = "free_y", ncol = 1) +  # Use facet_wrap to organize the plots
+  theme_minimal()  # Apply a minimal theme for a clean appearance
+
+# Print the plot
+print(p)
+
+
+```
+
+```{r}
+library(ggplot2)
+library(dplyr)
+
+# Assuming 'volume' exists and is a measure of trading volume or another metric
+# Ensure 'date' is in a date format, convert if necessary
+Mcapdf$date <- as.Date(Mcapdf$date)
+
+# Filter the data for the specified rank ranges and prepare it for plotting
+top_coins_data <- Mcapdf %>%
+  filter(rank >= 1 & rank <= 1000) %>%
+  mutate(rank_category = case_when(
+    rank >= 1 & rank <= 10 ~ "Rank 1-10",
+    rank >= 20 & rank <= 100 ~ "Rank 20-100",
+    rank >= 100 & rank <= 350 ~ "Rank 100-350",
+    rank >= 350 & rank <= 1000 ~ "Rank 350-1000"
+  )) %>%
+  filter(!is.na(rank_category))
+
+# Create a scatter plot with facets
+scatter_plot <- ggplot(top_coins_data, aes(x = date, y = cum_ret, color = mcapcat, size = market_cap)) +
+  geom_point(alpha = 0.6) +  # Set transparency for better visibility of overlapping points
+  scale_color_brewer(palette = "Dark2") +  # A color palette that provides good contrast
+  facet_wrap(~ rank_category, scales = "free") +  # Faceted by rank category with free scales
+  labs(
+    title = "Market Cap vs. Log Returns",
+    x = "Cum Return",
+    y = "date",
+    color = "Market Cap Category",
+    size = "Mcap"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "right")  # Adjust legend position for better fit
+
+# Print the scatter plot
+print(scatter_plot)
+```
+
+```{r}
+library(ggplot2)
+library(dplyr)
+
+# Assuming 'volume' exists and is a measure of trading volume or another metric
+# Ensure 'date' is in a date format, convert if necessary
+Mcapdf$date <- as.Date(Mcapdf$date)
+
+# Filter the data for the specified rank ranges and prepare it for plotting
+top_coins_data <- Mcapdf %>%
+  filter(rank >= 1 & rank <= 1000) %>%
+  mutate(rank_category = case_when(
+    rank >= 1 & rank <= 10 ~ "Rank 1-10",
+    rank >= 20 & rank <= 100 ~ "Rank 20-100",
+    rank >= 100 & rank <= 350 ~ "Rank 100-350",
+    rank >= 350 & rank <= 1000 ~ "Rank 350-1000"
+  )) %>%
+  filter(!is.na(rank_category))
+
+# Create a scatter plot with facets
+scatter_plot <- ggplot(top_coins_data, aes(x = date, y = cum_log_ret, color = mcapcat, size = market_cap)) +
+  geom_point(alpha = 0.1) +  # Set transparency for better visibility of overlapping points
+  scale_color_brewer(palette = "Dark2") +  # A color palette that provides good contrast
+  facet_wrap(~ rank_category, scales = "free") +  # Faceted by rank category with free scales
+  labs(
+    title = "Market Cap vs. Log Returns",
+    x = "Cum Log Return",
+    y = "date",
+    color = "Market Cap Category",
+    size = "Mcap"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "right")  # Adjust legend position for better fit
+
+# Print the scatter plot
+print(scatter_plot)
+```
+
+```{r}
+
+# Filter data for the specified date
+top_coins_data <- Mcapdf %>%
+  filter(date == as.Date("2024-04-20"))
+
+# Check if data exists for the specified date and correct columns are populated
+if(nrow(top_coins_data) == 0) {
+  stop("No data available for the specified date.")
+}
+
+# Ensure the 'cum_log_ret' is a numeric column
+top_coins_data$cum_log_ret <- as.numeric(top_coins_data$cum_log_ret)
+
+# Create a scatter plot
+scatter_plot <- ggplot(top_coins_data, aes(x = cum_log_ret, y = market_cap, color = mcapcat, size = market_cap)) +
+  geom_point(alpha = 0.6) +  # Adjust transparency for better visibility
+  scale_color_brewer(palette = "Dark2") +  # A color palette that provides good contrast
+  scale_y_log10() +  # Log scale for market cap to handle wide data range
+  labs(
+    title = "Market Cap vs. Cumulative Log Returns for Cryptocurrencies on 2024-04-20",
+    x = "Cumulative Log Return",
+    y = "Market Capitalization",
+    color = "Market Cap Category",
+    size = "Market Cap"
+  ) +
+  theme_minimal()
+
+# Print the scatter plot
+print(scatter_plot)
+
+
+```
+```{r}
+library(ggplot2)
+library(dplyr)
+library(scales)  # for number formatting
+
+# Assuming the data preparation steps are already done and 'top_coins_data' is ready
+# Filter the data for a specific period, e.g., January 2024
+start_date <- as.Date("2020-05-04")
+end_date <- as.Date("2020-05-05")
+filtered_data <- top_coins_data %>%
+  filter(date >= start_date & date <= end_date)
+
+# Ensure the 'cum_log_ret' is a numeric column
+filtered_data$cum_log_ret <- as.numeric(filtered_data$cum_log_ret)
+
+# Create a scatter plot
+scatter_plot <- ggplot(filtered_data, aes(x = cum_log_ret, y = market_cap, color = mcapcat, size = market_cap)) +
+  geom_point(alpha = 0.6) +  # Adjust transparency for better visibility
+  scale_x_continuous(limits = c(-5, 10)) +  # Extend the x-axis range to 20
+  scale_y_log10(labels = label_scientific(accuracy = 1)) +  # Log scale for market cap with custom labels
+  scale_color_brewer(palette = "Dark2") +  # A color palette that provides good contrast
+  labs(
+    title = "Market Cap vs. Cumulative Log Returns for Cryptocurrencies (HD2020)",
+    x = "Cumulative Log Return",
+    y = "Market Capitalization",
+    color = "Market Cap Category",
+    size = "Market Cap"
+  ) +
+  theme_minimal() +
+  theme(
+    axis.text.y = element_text(angle = 0)  # Ensure y-axis labels are not angled
+  )
+
+# Print the scatter plot
+print(scatter_plot)
+
+```
+
+```{r}
+library(ggplot2)
+library(dplyr)
+library(scales)  # for number formatting
+
+# Assuming the data preparation steps are already done and 'top_coins_data' is ready
+# Filter the data for a specific period, e.g., January 2024
+start_date <- as.Date("2024-04-20")
+end_date <- as.Date("2024-04-20")
+filtered_data <- top_coins_data %>%
+  filter(date >= start_date & date <= end_date)
+
+# Ensure the 'cum_log_ret' is a numeric column
+filtered_data$cum_log_ret <- as.numeric(filtered_data$cum_log_ret)
+
+# Create a scatter plot
+scatter_plot <- ggplot(filtered_data, aes(x = cum_log_ret, y = market_cap, color = mcapcat, size = market_cap)) +
+  geom_point(alpha = 0.6) +  # Adjust transparency for better visibility
+  scale_x_continuous(limits = c(-5, 10)) +  # Extend the x-axis range to 20
+  scale_y_log10(labels = label_scientific(accuracy = 1)) +  # Log scale for market cap with custom labels
+  scale_color_brewer(palette = "Dark2") +  # A color palette that provides good contrast
+  labs(
+    title = "Market Cap vs. Cumulative Log Returns for Cryptocurrencies (HD2024)",
+    x = "Cumulative Log Return",
+    y = "Market Capitalization",
+    color = "Market Cap Category",
+    size = "Market Cap"
+  ) +
+  theme_minimal() +
+  theme(
+    axis.text.y = element_text(angle = 0)  # Ensure y-axis labels are not angled
+  )
+
+# Print the scatter plot
+print(scatter_plot)
+
+```
+
