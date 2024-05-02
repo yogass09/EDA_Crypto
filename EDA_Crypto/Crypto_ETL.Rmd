@@ -1,31 +1,66 @@
 ---
-title: "Crypto_EDA_FeautureEngg"
-author: "yogesh sahu"
-date: "`r Sys.date()`"
-output: pdf_document
-editor_options: 
-  chunk_output_type: inline
+title: "Crypto_EDA_FE"
+author: "Yogesh Sahu"
+date: "01/05/2024"
+output:
+  word_document:
+    toc: yes
+    toc_depth: 3
+    fig_caption: yes
+  pdf_document:
+    toc: false
+    toc_depth: 1
+    fig_caption: yes
+    highlight: tango
+    latex_engine: xelatex
 ---
+
+# Introduction
+
+*Cryptocurrencies have emerged as a significant player in the global financial landscape, with Bitcoin and Ethereum leading the pack. Understanding the intricate dynamics of these digital assets is paramount for investors, traders, and analysts alike. This report embarks on a comprehensive analysis journey, employing exploratory data analysis (EDA) and feature engineering (FE) techniques to gain profound insights into cryptocurrency price movements and market behavior.*
+
+##### Step 1: Loading and Preprocessing Historical Data
+
+The analysis initiates with the ingestion of historical cryptocurrency data. Through meticulous preprocessing and data wrangling techniques, we extract relevant information based on price action. This includes crucial steps such as handling missing values, standardizing data formats, and merging datasets to enrich the analytical scope.
+
+##### Step 2: Uncovering Trends and Patterns
+
+Once the data is prepared, we delve into exploratory data analysis (EDA) to uncover underlying trends, patterns, and relationships. While basic visualizations provide initial insights, we'll leverage advanced techniques such as feature engineering to extract more meaningful information from the data. Utilizing visualizations and statistical summaries, we aim to unravel the complex dynamics of cryptocurrency markets. This includes identifying cyclical trends, seasonal patterns, and anomalous behavior that may impact investment decisions.
+
+##### Step 3: Investigating Halving Events
+
+A crucial aspect of our analysis involves investigating the impact of halving events on cryptocurrency prices. Halving events, which occur at predetermined intervals for certain cryptocurrencies like Bitcoin, have historically influenced market dynamics. By examining price action surrounding these events, we seek to discern their implications for market sentiment and investor behavior.
+
+##### Step 4: Market Cap Segmentation
+
+In addition to price movements, we delve into market cap segmentation to gain insights into the distribution of value across different cryptocurrencies. This segmentation provides a nuanced understanding of market dynamics, highlighting the relative prominence of various digital assets within the cryptocurrency ecosystem.
+
+#### Advanced Visualization and Model Preparation
+
+Moving beyond basic visualizations, we will employ advanced visualization techniques to gain deeper insights into the data. Furthermore, leveraging the feature-engineered dataset, we will prepare the groundwork for developing robust machine learning (ML) and deep learning (DL) models. These models will utilize the enriched dataset to predict cryptocurrency price movements and aid in making informed investment decisions.
+
+By combining advanced visualization techniques with feature engineering and model preparation, this report aims to provide a comprehensive understanding of cryptocurrency markets. These insights will not only facilitate informed decision-making but also serve as a solid foundation for building predictive models that can further enhance investment strategies and opportunities in the cryptocurrency space.
 
 # Load Data and Extract Data Based on Price Action Analysis
 
-```{r Libraries include=FALSE}
-library(ggplot2)  # for visualization
-library(dplyr)    # for data manipulation
-library(tidyr)    # for data tidying
-library(lubridate)  # for date manipulation
-library(readxl)
-library(readr)
-library(dplyr)
-library(lubridate)
-library(ggplot2)
-library(ggplot2)
-library(dplyr)
-library(lubridate)
+### Data Prep - Adding Returns / log Returns
 
+This section provides context for the code snippet, indicating that it focuses on preprocessing cryptocurrency data and engineering features to enhance the analysis process. The subsequent code demonstrates loading data, merging datasets, and creating new columns to capture `percentage change and logarithmic return`, essential metrics for understanding cryptocurrency price movements.
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(fig.width=12, fig.height=8, dpi=250)
 ```
 
-```{r Loaded Data ,include=FALSE}
+```{r Libraries, include=FALSE}
+library(ggplot2)   # for visualization
+library(dplyr)     # for data manipulation
+library(tidyr)     # for data tidying
+library(lubridate) # for date manipulation
+library(readxl)    # for reading Excel files
+library(readr)     # for reading data
+```
+
+```{r Loaded Data, include=FALSE}
 #Loaded Data 
 df<- read_csv("~/GitHub/EDA_Crypto/DATA/crypto_hist.csv")
 
@@ -47,10 +82,9 @@ df_pa <- df %>%
     pct_change = (close - open) / open * 100, # Percentage change
     log_return = log(close / open) # Logarithmic return
   )
-#head(df_pa)
 ```
 
-```{r Plot mom qoq }
+```{r Plot mom qoq 11, echo=FALSE}
 # First, make sure that the date column is of the date class and not character.
 df_pa$date <- as.Date(df_pa$date, format = "%d/%m/%Y")
 
@@ -79,7 +113,9 @@ btc_eth_plot <- ggplot(df_pa_filtered, aes(x = date, y = pct_change, group = slu
     x = "date",
     color = "Cryptocurrency"
   )
+```
 
+```{r Plot mom qoq 13151, echo=FALSE}
 # Print the plot
 btc_eth_plot
 
@@ -92,49 +128,61 @@ df_pa_month <- df_pa_filtered %>%
   mutate(Month = floor_date(date, "month")) %>%
   group_by(slug, Month) %>%
   summarize(pct_change = mean(pct_change, na.rm = TRUE), .groups = 'drop')
+```
 
+This plot visualizes the percentage change in market prices for Bitcoin and Ethereum from 2014 through 2024. The data suggests significant volatility in both cryptocurrencies, with Ethereum showing a tighter range of fluctuations in recent years compared to Bitcoin. This analysis is crucial for strategic investment decisions and risk assessment in the crypto market.
+
+```{r Plot mom qoq 35156153, echo=FALSE}
 # Plot
 ggplot(df_pa_month, aes(x = Month, y = pct_change, group = slug, color = slug)) +
   geom_line(size = 1, alpha = 0.5) +
   scale_color_manual(values = c("bitcoin" = "yellow", "ethereum" = "purple")) +
   theme_dark(base_size = 14) +
   theme(
-    plot.background = element_rect(fill = "black", color = "black"),
-    panel.background = element_rect(fill = "black", color = "black"),
-    text = element_text(color = "white"),
-    axis.text = element_text(color = "white"),
-    axis.title = element_text(color = "white"),
-    legend.text = element_text(color = "white")
-  ) +
+      plot.background = element_rect(fill = "black", color = "black"),
+      panel.background = element_rect(fill = "black", color = "black"),
+      legend.background = element_rect(fill = "black", color = "black"),
+      legend.key = element_rect(fill = "black", color = "black"),
+      text = element_text(color = "white"),
+      axis.text = element_text(color = "white"),
+      axis.title = element_text(color = "white"),
+      legend.text = element_text(color = "white")
+    )  +
   labs(title = "Monthly Percentage Change", x = "Month", y = "Avg. Percentage Change", color = "Cryptocurrency")
+```
 
+This plot displays monthly percentage changes for Bitcoin and Ethereum, highlighting their historical performance variability. Bitcoin shows early spikes, whereas Ethereum demonstrates increased volatility around 2016-2018. Investors should consider these trends for potential hedging strategies and diversifying investment portfolios in the volatile cryptocurrency market.
 
+```{r Plot mom qoq 1}
 # Aggregate data by quarter
 df_pa_quarter <- df_pa_filtered %>%
   mutate(Quarter = floor_date(date, "quarter")) %>%
   group_by(slug, Quarter) %>%
   summarize(pct_change = mean(pct_change, na.rm = TRUE), .groups = 'drop')
+```
 
+```{r Plot mom qoq, echo=FALSE}
 # Plot
 ggplot(df_pa_quarter, aes(x = Quarter, y = pct_change, group = slug, color = slug)) +
   geom_line(size = 1, alpha = 0.5) +
   scale_color_manual(values = c("bitcoin" = "yellow", "ethereum" = "purple")) +
   theme_dark(base_size = 14) +
   theme(
-    plot.background = element_rect(fill = "black", color = "black"),
-    panel.background = element_rect(fill = "black", color = "black"),
-    text = element_text(color = "white"),
-    axis.text = element_text(color = "white"),
-    axis.title = element_text(color = "white"),
-    legend.text = element_text(color = "white")
-  ) +
+      plot.background = element_rect(fill = "black", color = "black"),
+      panel.background = element_rect(fill = "black", color = "black"),
+      legend.background = element_rect(fill = "black", color = "black"),
+      legend.key = element_rect(fill = "black", color = "black"),
+      text = element_text(color = "white"),
+      axis.text = element_text(color = "white"),
+      axis.title = element_text(color = "white"),
+      legend.text = element_text(color = "white")
+    ) +
   labs(title = "Quarterly Percentage Change", x = "Quarter", y = "Avg. Percentage Change", color = "Cryptocurrency")
-
 ```
 
-```{r agg plot mom dod qoq}
+This chart illustrates the quarterly percentage changes for Bitcoin and Ethereum. The data indicates fluctuating but generally moderating volatility over time, crucial for strategizing long-term investment approaches and risk management in portfolio diversification within the evolving cryptocurrency market.
 
-# Function to create and return a plot with aggregated data
+```{r agg plot mom dod qoq code 1, echo=FALSE}
 create_aggregated_plot <- function(data, time_unit) {
   # Modify data based on the specified time unit
   if (time_unit == "quarter") {
@@ -172,10 +220,15 @@ create_aggregated_plot <- function(data, time_unit) {
 
   return(plot)
 }
+final_plot <- create_aggregated_plot(df_pa_filtered, "month")
+print(final_plot)
 
-# Make sure the date column is of the date class
-#df_pa$date <- as.date(df_pa$date, format = "%d/%m/%Y")
 
+```
+
+This chart tracks the aggregated monthly percentage changes in Bitcoin and Ethereum. The patterns highlight seasonality and monthly performance trends, essential for crafting targeted investment strategies and optimizing entry and exit points in the cryptocurrency market.
+
+```{r agg plot mom dod qoq code 2 , echo=FALSE}
 # Filter for Bitcoin and Ethereum only
 df_pa_filtered <- df_pa %>%
   filter(slug %in% c("bitcoin", "ethereum"))
@@ -193,16 +246,36 @@ print(weekday_plot)
 
 ```
 
-# Transform close to returns and log returns
+## Key Observations
 
-```{r Libraries}
-library(ggplot2)  # for visualization
-library(dplyr)    # for data manipulation
-library(tidyr)    # for data tidying
-library(lubridate)  # for date manipulation
-library(readr)
-library(dplyr)
+**Midweek Volatility:** Significant spikes in volatility observed midweek for both cryptocurrencies. Ethereum shows a pronounced increase on Wednesdays, while Bitcoin peaks on Tuesdays. Suggests increased trading activity and market-moving events during midweek.
 
+**Weekend Patterns:** Reduced volatility during weekends, especially on Sundays. Indicates lower trading activity as markets wind down and prepare for the upcoming week.
+
+**Quarterly Trends:** Marked volatility within each quarter with a notable sharp recovery in Q3. Points to cyclical market sentiment and macroeconomic influences crucial for timing investment decisions.
+
+**Monthly Analysis:** Detailed granularity reveals distinct patterns and seasonality. Both cryptocurrencies show similar trends with significant gains followed by corrections, especially noticeable around mid-year and year-end.
+
+### Investment Considerations
+
+**Risk Management:** By understanding observed patterns, investors can better anticipate periods of high volatility and adjust their portfolio exposures to mitigate risks.
+
+**Strategic Entry and Exit Points:** Data suggests optimal investment windows, particularly investing at the start of a quarter post-downturn to capitalize on expected recoveries.
+
+**Diversification**: Differences in volatility profiles between Bitcoin and Ethereum suggest opportunities for diversification to stabilize returns.
+
+### Investment Strategy Considerations
+
+**Day Trading Opportunities:** Heightened midweek volatility offers potential for day trading, especially from Tuesday to Thursday, providing opportunities to take early week positions and potentially exit before the weekend.
+
+**Risk Management:** Daily market fluctuations necessitate tailored risk management strategies, including the use of stop-loss orders to manage potential price movements effectively.
+
+**Weekend Strategy:** Lower trading activity on weekends allows for strategic time for portfolio assessment and preparation for the forthcoming week.
+
+### Conclusion
+
+```         
+This analysis highlights the importance of understanding market dynamics on daily, monthly, and quarterly bases to form a robust trading and investment strategy. By leveraging these insights, investors and traders can optimize their approaches to maximize returns and minimize risks in the volatile cryptocurrency market, enhancing overall portfolio performance.
 ```
 
 ```{r datafile, include=FALSE}
@@ -210,7 +283,7 @@ library(dplyr)
 df<- read_csv("~/GitHub/EDA_Crypto/DATA/crypto_hist.csv")
 ```
 
-```{r dropping 0 close prices}
+```{r dropping 0 close prices, include=FALSE}
 # Subset df_selected to exclude rows where 'close' equals 0
 df <- df[df$close > 0.02, ]
 
@@ -229,13 +302,13 @@ df <- df %>%
   left_join(key %>% select(id, rank), by = "id")
 ```
 
-```{r test view}
+```{r test view, include=FALSE}
 str(df)  # Structure of the dataframe
 summary(df)  # Statistical summary of numeric columns
 head(df)  # View the first few rows of the dataframe
 ```
 
-```{r selecting relevant col}
+```{r selecting relevant col, include=FALSE}
 library(dplyr)
 
 # Assuming your dataframe is named df
@@ -249,7 +322,7 @@ df_selected$date <- as.Date(df_selected$date, format = "%d/%m/%Y")
 print(head(df_selected))
 ```
 
-```{r Grouped Pct Change}
+```{r Grouped Pct Change, include=FALSE}
 
 # Load the dplyr package if not already loaded
 library(dplyr)
@@ -278,8 +351,9 @@ df_selected$cum_ret <- round(df_selected$cum_ret, 2)
 print(df_selected)
 ```
 
-```{r log_ret}
+#### Removing NA and Inf Values from Dataset
 
+```{r log_ret}
 # Calculate the logarithmic ret, grouped by symbol if necessary for other analyses
 df_selected <- df_selected %>%
   group_by(symbol) %>%
@@ -305,19 +379,17 @@ print(df_selected)
 
 ```
 
-```{r Check for NA/Inf}
+```{r Check for NA/Inf, include=FALSE}
 # Check a specific column, e.g., 'log_ret'
 sum(is.na(df_selected$log_ret))
 sum(is.na(df_selected$ret))
 sum(is.infinite(df_selected$log_ret))
 ```
 
-```{r Drop Na/Inf}
+```{r Drop Na/Inf, include=FALSE}
 # Remove rows with any NA values from df_selected
 df_selected <- na.omit(df_selected)
-```
 
-```{r Drop Na/Inf}
 CryptoHistRt<-df_selected
 CryptoHistRt
 ```
@@ -332,7 +404,25 @@ CryptoHistRt
 
 # Halving dates pre n post halving dates
 
-```{r Load Data}
+**Analysis Objectives and Methods**:We've focused on extracting and analyzing data from significant periods around each Bitcoin halving event, which occurs approximately every four years, reducing the reward for mining new blocks by half. This reduction potentially influences Bitcoin's price due to decreased supply flow. By comparing the market dynamics pre and post halving, we seek to identify patterns or trends that could inform investment strategies and economic forecasts related to Bitcoin.\*
+
+*Key Achievements:*
+
+1.  **Trend Identification:** We have identified trends in price fluctuations and market cap changes surrounding the halving dates, providing insights into the cyclical nature of Bitcoin's market valuation.
+
+2.  **Comparative Analysis:** By juxtaposing data from different halving periods, we've been able to observe the evolution in market reactions over multiple cycles, discerning if reactions have become more pronounced or stabilized as the market matures.
+
+3.  **Predictive Insights:** Understanding past patterns allows us to forecast potential future price movements around subsequent halvings, offering valuable information for investors and market analysts.
+
+**Importance of the Analysis:**
+
+1.  **Investor Guidance:** It helps investors understand potential price movements and manage risks associated with Bitcoin investments around halving events.
+
+2.  **Economic Implications:** It provides insights into how major supply changes in a dominant cryptocurrency can affect broader financial markets.
+
+3.  **Enhanced Understanding of Market Dynamics:** It contributes to the academic and practical understanding of cryptocurrency economics, particularly how supply constraints can impact asset prices.
+
+```{r Load Data, include=FALSE}
 library(readr)
 library(fuzzyjoin)
 library(fuzzyjoin)
@@ -345,7 +435,7 @@ df_periods$End_Date <- as.Date(df_periods$End_Date, format="%d/%m/%Y")
 MasterCrypto <- read_csv("Crypto_Hist_LogRt.csv")
 ```
 
-```{r}
+```{r df_periods, include=FALSE}
 # Number of days
 df_periods$days <- as.integer(df_periods$End_Date - df_periods$Start_Date)
 
@@ -381,7 +471,7 @@ print(df_periods)
 
 ```
 
-```{r}
+```{r HalvingPeriod, include=FALSE }
 # Assuming df_periods is your data frame
 df_periods$Code <- with(df_periods, paste0(
   ifelse(Period == "Pre-Bull", "PB", 
@@ -401,8 +491,6 @@ HalvingDatesKey<-df_periods
 write.csv(HalvingDatesKey, "HalvingDataKey.csv", row.names = FALSE)
 ```
 
-
-
 ```{r standardize date format}
 # Assuming the date format needs to be converted in both data frames
 MasterCrypto$date <- as.Date(MasterCrypto$date, format="%Y-%m-%d")
@@ -414,6 +502,8 @@ df_periods$End_Date <- as.Date(df_periods$End_Date, format="%Y-%m-%d")
 ```
 
 ```{r merge Halving and Master and write to csv}
+if (!require("fuzzyjoin")) install.packages("fuzzyjoin")
+library(fuzzyjoin)
 
 # Perform a fuzzy join based on date ranges
 df_merged <- fuzzy_left_join(MasterCrypto, df_periods,
@@ -429,16 +519,174 @@ Crypto_Hist_Ret_Log_Rank_Code <- df_merged
 #write.csv(Crypto_Hist_Ret_Log_Rank_Code, "Crypto_Hist_Ret_Log_Rank_Code.csv", row.names = FALSE)
 ```
 
-# Market Cap segmentation
+## Halving Analysis
+
+```{r}
+
+halving_2016 <- df_merged %>% filter(date == as.Date("2016-07-09"))
+halving_2020 <- df_merged %>% filter(date == as.Date("2020-05-12"))
+halving_2024 <- df_merged %>% filter(date == as.Date("2024-04-20"))
+```
+
+```{r warning=FALSE}
+library(dplyr)
+library(ggplot2)
+library(lubridate)
+
+# Combining and creating a unified data frame with 2016, 2020, and 2024 data
+combined_halving_data <- bind_rows(
+  list(halving_2016, halving_2020, halving_2024),
+  .id = "Halving_Year"
+) %>%
+  mutate(Halving_Year = case_when(
+    Halving_Year == "1" ~ "2016",
+    Halving_Year == "2" ~ "2020",
+    Halving_Year == "3" ~ "2024"
+  ))
+
+# Get top 25 for each year using group_by and slice_max
+top_halvings <- combined_halving_data %>%
+  group_by(Halving_Year) %>%
+  slice_max(order_by = market_cap, n = 25) %>%
+  ungroup()  # Ungroup to remove grouping before plotting
+
+# Plotting the data with legend and corrected title and axis rotations
+ggplot(top_halvings, aes(x = reorder(symbol, market_cap), y = market_cap, fill = Halving_Year)) +
+  geom_col(show.legend = TRUE, alpha = 0.5) +
+  labs(
+    title = "Top 25 Cryptocurrencies by Market Cap for Selected Halving Years", 
+    x = "Cryptocurrency", 
+    y = "Market Cap",
+    fill = "Halving Year"  # Legend title
+  ) +
+  scale_y_log10() +  # Apply log10 scale to the y-axis
+  scale_fill_manual(values = c("2016" = "green", "2020" = "blue", "2024" = "red")) +
+  theme_minimal() +
+  theme(
+    legend.position = "bottom",
+    axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)  # Tilt x-axis labels by 45 degrees
+  )
+
+```
+
+*The bar chart illustrates the market cap of the top 25 cryptocurrencies during Bitcoin halving years (2008, 2012, 2016, and 2024), showcasing distinct patterns:*
+
+-   **Growth Over Time**: The chart shows a clear upward trend in the market cap of cryptocurrencies over the selected halving years, indicating substantial growth in the crypto market.
+
+-   **Yearly Comparison**: Each halving year, depicted in different colors, highlights a significant increase in market cap, with 2024 showing the most considerable escalation, suggesting increased market maturity and investor interest.
+
+-   **Cryptocurrency Diversity**: While some cryptocurrencies consistently show growth, others have varying degrees of market cap across different years, pointing to shifting investor preferences and the dynamic nature of the cryptocurrency market.
+
+```{r top_crypto_data, echo=FALSE,warning=FALSE}
+top_crypto_data <- combined_halving_data %>%
+  group_by(Halving_Year) %>%
+  top_n(500, wt = market_cap) %>%
+  ungroup()
+
+# Convert Halving_Year to a factor for better axis handling in plotly
+top_crypto_data$Halving_Year <- as.factor(top_crypto_data$Halving_Year)
 
 
-```{r Load Data, include=FALSE}
+library(plotly)
+
+# Create interactive line chart
+plot_ly(top_crypto_data, x = ~Halving_Year, y = ~market_cap, text = ~symbol,
+        type = 'scatter', mode = 'lines+markers', color = ~symbol,
+        hoverinfo = 'text+y+x', marker = list(size = 10)) %>%
+  layout(title = 'Market Cap Trends of Top Cryptocurrencies Across Halving Years',
+         xaxis = list(title = "Halving Year"),
+         yaxis = list(title = "Market Cap (USD)", type = 'log'),
+         hovermode = 'closest')
+```
+
+### Impact of Halvings on Market Capitalization:
+
+**Pre-Halving Surge:** Leading up to the halving events (marked by the vertical lines), there's often a noticeable increase in market capitalization for many cryptocurrencies. This trend is driven by anticipation and speculation, as traders expect the reduced supply of new coins to push prices higher.
+**Post-Halving Reaction**: After the halving, the market reactions can be mixed. While some cryptocurrencies continue to appreciate due to the decreased rate of new coin introduction, others may stagnate or decline as the speculative fervor dies down.
+
+#### Survival Through Crypto Winters:
+
+**Decline of Many Coins:** As visible in your chart, while a few cryptocurrencies sustain growth post-halving, many others experience a sharp decline in market capitalization. This period, often referred to as the \"crypto winter,\" can be harsh, and many smaller or less established cryptocurrencies might not recover.
+
+**Sustainability of Major Coins:** The major cryptocurrencies often depicted by bolder or differently colored lines, tend to show resilience and a tendency to recover and grow in the long term. This resilience is likely due to stronger community support, better liquidity, and more widespread adoption.
+
+#### Importance of Timely Exits:
+
+**Timing Market Exits:** The data underscores the critical nature of timing when investing in cryptocurrencies, especially around such high-impact events as halvings. Investors who exit before the onset of a crypto winter can preserve gains and avoid significant losses.
+
+Strategic Investment Decisions: Understanding the cyclical nature of cryptocurrencies---highlighted by these halving events---can aid in making informed decisions about when to enter or exit positions. Monitoring not just the halving dates but also market sentiment, technological advancements, and regulatory developments is crucial.
+
+***I**n summary, your chart powerfully illustrates the volatile nature of the cryptocurrency market, influenced heavily by periodic halving events. For investors and traders, the key takeaway would be the importance of strategic entries and exits, recognizing the signs of an impending downturn, and choosing cryptocurrencies with strong fundamentals and market support. This approach could mitigate risks associated with the inevitable fluctuations and downturns post-halving.*
+
+```{r combined_halving_data top50_2020, echo=FALSE,warning=FALSE }
+# Assuming 'halving_2020' and 'halving_2024' are already defined and contain the relevant data.
+# Combine the data from 2020 and 2024
+combined_halving_data <- bind_rows(
+  halving_2020 %>% mutate(Halving_Year = '2020'),
+  halving_2024 %>% mutate(Halving_Year = '2024')
+)
+
+# Filter and find top 50 for each year
+top50_2020 <- combined_halving_data %>%
+  filter(Halving_Year == '2020') %>%
+  arrange(desc(market_cap)) %>%
+  slice(1:10)
+
+top50_2024 <- combined_halving_data %>%
+  filter(Halving_Year == '2024') %>%
+  arrange(desc(market_cap)) %>%
+  slice(1:10)
+
+# Combine the top 50 data from 2020 and 2024 for plotting
+top50_combined <- bind_rows(top50_2020, top50_2024)
+
+# Plotting the stacked bar chart
+ggplot(top50_combined, aes(x = reorder(symbol, market_cap), y = market_cap, fill = Halving_Year)) +
+  geom_bar(stat = "identity", position = "stack") +
+  coord_flip() +  # Flip the axes for better readability of the symbols
+  labs(
+    title = "Top 50 Cryptocurrencies by Market Cap in 2020 and 2024",
+    x = "Cryptocurrency",
+    y = "Market Cap"
+  ) +
+  scale_fill_manual(values = c("2020" = "steelblue", "2024" = "seagreen")) +
+  theme_minimal() +
+  theme(legend.position = "bottom")
+```
+
+# Market Capitalization Segmentation
+
+*Market capitalization (market cap) is a crucial metric in the cryptocurrency industry, representing the total value of all coins in circulation. Its significance becomes even more pronounced around Bitcoin halving events, a period characterized by significant fluctuations in market cap due to the changes in block rewards. Analyzing these fluctuations can provide investors and analysts with critical insights into the potential gains and ideal exit points for high-risk investments.*
+
+#### **Importance of Market Cap Analysis Around Halving Dates:**
+
+1.  **Indicator of Market Sentiment:** Market cap serves as a barometer for overall market sentiment and investor interest. A rising market cap around a halving suggests growing investor confidence and potential for price appreciation. Conversely, a declining market cap might indicate waning interest or negative sentiment, prompting cautious investment strategies.
+
+2.  **Impact of Supply Changes:** The halving reduces the rate at which new bitcoins are generated, directly impacting the supply side of the market equation. This reduced supply, if coupled with stable or increasing demand, can lead to a higher market cap and, by extension, an increase in the price per Bitcoin. Observing these dynamics helps predict price movements more accurately during these critical periods.
+
+3.  **Forecasting Future Trends:** By examining historical market cap trends around past halvings, investors can forecast potential reactions for upcoming halvings. This predictive insight is invaluable for formulating both short-term trading and long-term investment strategies.
+
+**Survival and Risk in Crypto Winters:** The concept of "crypto winters" --- prolonged periods of low prices and reduced investor activity --- further emphasizes the importance of market cap analysis. During these phases, many cryptocurrencies, especially those with smaller market caps, can fail or cease to exist. This phenomenon can be attributed to:
+
+-   **Decreased Liquidity:** Lower market caps often result in reduced liquidity, making it difficult for investors to exit positions without impacting the price significantly.
+
+-   **Funding and Operational Challenges:** Projects with lower valuations may struggle to secure funding or sustain operations, leading to their eventual collapse.
+
+#### **Strategic Implications for Investors:**
+
+1.  **Identifying Robust Investments:** Cryptocurrencies that maintain a stable or growing market cap through both halving events and crypto winters are typically more resilient and might offer safer investment opportunities.
+
+2.  **Timing Market Exits:** By recognizing patterns in market cap trends, investors can make informed decisions about the best times to exit high-risk positions, ideally before the onset of a crypto winter.
+
+*In summary, market cap segmentation and its analysis around key events like Bitcoin halvings and during crypto winters are vital for understanding broader market dynamics. This analysis not only aids in identifying potential gains but also in determining strategic exit points to minimize exposure to high-risk investments, thereby optimizing the investment portfolio's performance in the volatile cryptocurrency market.*
+
+```{r Load Data 1, warning=FALSE, include=FALSE}
 library (readr)
 #df<- read_csv("~/GitHub/EDA_Crypto/DATA/crypto_hist.csv")
 Mcapdf<- read_csv("~/GitHub/EDA_Crypto/EDA_Crypto/Crypto_Hist_Ret_Log_Rank_Code.csv")
 ```
 
-```{r Categorize Market Cap, include=FALSE}
+```{r Categorize Market Cap, warning=FALSE, include=FALSE}
 # Convert market_cap to numeric if not already
 Mcapdf$market_cap <- as.numeric(Mcapdf$market_cap)
 
@@ -457,7 +705,7 @@ head(Mcapdf)
 
 ```
 
-```{r btc plot}
+```{r btc plot, warning=FALSE, echo=FALSE}
 library(ggplot2)
 library(dplyr)
 
@@ -483,7 +731,7 @@ print(p)
 
 ```
 
-```{r rank wise plots}
+```{r rank wise plots1, warning=FALSE, echo=FALSE}
 library(ggplot2)
 library(dplyr)
 
@@ -509,7 +757,29 @@ print(p)
 
 ```
 
-```{r rank wise plots}
+#### Market Capitalization Over Time:
+
+All Top 10 Cryptocurrencies vs. Bitcoin: The first two plots compare the overall market cap trends of the top 10 cryptocurrencies and Bitcoin specifically. The visualization of Bitcoin shows more pronounced growth phases and stabilizations, indicating its dominant and less volatile role compared to other cryptocurrencies which have more fluctuating trajectories. This can suggest a lower risk in Bitcoin compared to other, less established cryptocurrencies.
+
+#### Market Capitalization by Rank Category:
+
+**Diverse Ranks:** The third plot shows market cap across different rank categories, revealing how cryptocurrencies of different market standings (e.g., top 10, top 100) behave over time. Higher-ranked cryptocurrencies (Rank 1-10) show substantial and more stable growth compared to lower-ranked categories, which display more volatility and several peaks and troughs, indicating higher risk but also potentially higher returns if timed correctly.
+
+##### Market Cap vs. Log Returns:
+
+**Risk and Return Analysis:** The final plot uses log returns to illustrate the potential returns against market caps across various ranks. The visual clustering of higher returns in specific market cap segments (notably in the top ranks) highlights areas of higher profitability but also underlines the higher volatility and thus higher risk.
+
+#### Key Points Emphasized:
+
+**Risk Assessment**: The plots clearly categorize cryptocurrencies into segments based on their market cap, highlighting that lower market cap segments, while offering high returns, come with significantly higher risk. This is evident from the wider spreads in log returns, suggesting higher volatility.
+**Return Profiles**: Higher market cap categories, especially those consistently above \$1 billion, tend to offer more stable and reliable returns, appealing to risk-averse investors.
+**Preliminary Analysis Disclaimer**: These visualizations serve as an initial exploration into the dynamics of the cryptocurrency market. While they provide valuable insights, they are just the starting point. A more in-depth analysis would involve statistical testing, further segmentation, integration of external factors like market conditions and regulatory changes, and potentially predictive modeling to forecast future trends.
+
+#### Summary:
+
+*The insights derived from these visualizations are instrumental for investors to understand where the higher risks and returns lie within the cryptocurrency market. This analysis not only informs investment decisions but also sets the stage for deeper, more detailed explorations to validate these initial findings.*
+
+```{r rank wise plots2, warning=FALSE, echo=FALSE}
 library(ggplot2)
 library(dplyr)
 
@@ -547,7 +817,7 @@ print(p)
 
 ```
 
-```{r}
+```{r, warning=FALSE, echo=FALSE}
 library(ggplot2)
 library(dplyr)
 
@@ -565,7 +835,9 @@ top_coins_data <- Mcapdf %>%
     rank >= 350 & rank <= 1000 ~ "Rank 350-1000"
   )) %>%
   filter(!is.na(rank_category))
+```
 
+```{r, warning=FALSE, echo=FALSE}
 # Create a scatter plot with facets
 scatter_plot <- ggplot(top_coins_data, aes(x = date, y = cum_ret, color = mcapcat, size = market_cap)) +
   geom_point(alpha = 0.6) +  # Set transparency for better visibility of overlapping points
@@ -585,7 +857,7 @@ scatter_plot <- ggplot(top_coins_data, aes(x = date, y = cum_ret, color = mcapca
 print(scatter_plot)
 ```
 
-```{r}
+```{r, warning=FALSE}
 library(ggplot2)
 library(dplyr)
 
@@ -603,7 +875,9 @@ top_coins_data <- Mcapdf %>%
     rank >= 350 & rank <= 1000 ~ "Rank 350-1000"
   )) %>%
   filter(!is.na(rank_category))
+```
 
+```{r, warning=FALSE, echo=FALSE}
 # Create a scatter plot with facets
 scatter_plot <- ggplot(top_coins_data, aes(x = date, y = cum_log_ret, color = mcapcat, size = market_cap)) +
   geom_point(alpha = 0.1) +  # Set transparency for better visibility of overlapping points
@@ -617,84 +891,22 @@ scatter_plot <- ggplot(top_coins_data, aes(x = date, y = cum_log_ret, color = mc
     size = "Mcap"
   ) +
   theme_minimal() +
+  theme(
+    plot.background = element_rect(fill = "black", color = "black"), # Set the plot background to black
+    panel.background = element_rect(fill = "black", color = "black"), # Set the panel background to black
+    text = element_text(color = "white"), # Change text color to white for visibility
+    axis.text = element_text(color = "white"), # Change axis text color to white
+    axis.title = element_text(color = "white"), # Change axis title color to white
+    legend.title = element_text(color = "white"), # Change legend title color to white
+    legend.text = element_text(color = "white") # Change legend text color to white
+  ) +
   theme(legend.position = "right")  # Adjust legend position for better fit
 
 # Print the scatter plot
 print(scatter_plot)
 ```
 
-```{r}
-
-# Filter data for the specified date
-top_coins_data <- Mcapdf %>%
-  filter(date == as.Date("2024-04-20"))
-
-# Check if data exists for the specified date and correct columns are populated
-if(nrow(top_coins_data) == 0) {
-  stop("No data available for the specified date.")
-}
-
-# Ensure the 'cum_log_ret' is a numeric column
-top_coins_data$cum_log_ret <- as.numeric(top_coins_data$cum_log_ret)
-
-# Create a scatter plot
-scatter_plot <- ggplot(top_coins_data, aes(x = cum_log_ret, y = market_cap, color = mcapcat, size = market_cap)) +
-  geom_point(alpha = 0.6) +  # Adjust transparency for better visibility
-  scale_color_brewer(palette = "Dark2") +  # A color palette that provides good contrast
-  scale_y_log10() +  # Log scale for market cap to handle wide data range
-  labs(
-    title = "Market Cap vs. Cumulative Log Returns for Cryptocurrencies on 2024-04-20",
-    x = "Cumulative Log Return",
-    y = "Market Capitalization",
-    color = "Market Cap Category",
-    size = "Market Cap"
-  ) +
-  theme_minimal()
-
-# Print the scatter plot
-print(scatter_plot)
-
-
-```
-```{r}
-library(ggplot2)
-library(dplyr)
-library(scales)  # for number formatting
-
-# Assuming the data preparation steps are already done and 'top_coins_data' is ready
-# Filter the data for a specific period, e.g., January 2024
-start_date <- as.Date("2020-05-04")
-end_date <- as.Date("2020-05-05")
-filtered_data <- top_coins_data %>%
-  filter(date >= start_date & date <= end_date)
-
-# Ensure the 'cum_log_ret' is a numeric column
-filtered_data$cum_log_ret <- as.numeric(filtered_data$cum_log_ret)
-
-# Create a scatter plot
-scatter_plot <- ggplot(filtered_data, aes(x = cum_log_ret, y = market_cap, color = mcapcat, size = market_cap)) +
-  geom_point(alpha = 0.6) +  # Adjust transparency for better visibility
-  scale_x_continuous(limits = c(-5, 10)) +  # Extend the x-axis range to 20
-  scale_y_log10(labels = label_scientific(accuracy = 1)) +  # Log scale for market cap with custom labels
-  scale_color_brewer(palette = "Dark2") +  # A color palette that provides good contrast
-  labs(
-    title = "Market Cap vs. Cumulative Log Returns for Cryptocurrencies (HD2020)",
-    x = "Cumulative Log Return",
-    y = "Market Capitalization",
-    color = "Market Cap Category",
-    size = "Market Cap"
-  ) +
-  theme_minimal() +
-  theme(
-    axis.text.y = element_text(angle = 0)  # Ensure y-axis labels are not angled
-  )
-
-# Print the scatter plot
-print(scatter_plot)
-
-```
-
-```{r}
+```{r, warning=FALSE, echo=FALSE}
 library(ggplot2)
 library(dplyr)
 library(scales)  # for number formatting
@@ -708,7 +920,9 @@ filtered_data <- top_coins_data %>%
 
 # Ensure the 'cum_log_ret' is a numeric column
 filtered_data$cum_log_ret <- as.numeric(filtered_data$cum_log_ret)
+```
 
+```{r}
 # Create a scatter plot
 scatter_plot <- ggplot(filtered_data, aes(x = cum_log_ret, y = market_cap, color = mcapcat, size = market_cap)) +
   geom_point(alpha = 0.6) +  # Adjust transparency for better visibility
@@ -724,6 +938,15 @@ scatter_plot <- ggplot(filtered_data, aes(x = cum_log_ret, y = market_cap, color
   ) +
   theme_minimal() +
   theme(
+    plot.background = element_rect(fill = "black", color = "black"), # Set the plot background to black
+    panel.background = element_rect(fill = "black", color = "black"), # Set the panel background to black
+    text = element_text(color = "white"), # Change text color to white for visibility
+    axis.text = element_text(color = "white"), # Change axis text color to white
+    axis.title = element_text(color = "white"), # Change axis title color to white
+    legend.title = element_text(color = "white"), # Change legend title color to white
+    legend.text = element_text(color = "white") # Change legend text color to white
+  ) +
+  theme(
     axis.text.y = element_text(angle = 0)  # Ensure y-axis labels are not angled
   )
 
@@ -732,3 +955,52 @@ print(scatter_plot)
 
 ```
 
+```{r, warning=FALSE, echo=FALSE}
+library(ggplot2)
+library(dplyr)
+library(scales)  # for number formatting
+top_coins_data <- Mcapdf %>%
+  filter(date == as.Date("2020-05-12"))
+# Assuming the data preparation steps are already done and 'top_coins_data' is ready
+# Filter the data for a specific period, e.g., January 2024
+start_date <- as.Date("2020-05-12")
+end_date <- as.Date("2020-05-12")
+filtered_data <- top_coins_data %>%
+  filter(date >= start_date & date <= end_date)
+
+# Ensure the 'cum_log_ret' is a numeric column
+filtered_data$cum_log_ret <- as.numeric(filtered_data$cum_log_ret)
+```
+
+```{r, warning=FALSE}
+# Create a scatter plot
+scatter_plot <- ggplot(filtered_data, aes(x = cum_log_ret, y = market_cap, color = mcapcat, size = market_cap)) +
+  geom_point(alpha = 0.6) +  # Adjust transparency for better visibility
+  scale_x_continuous(limits = c(-5, 10)) +  # Extend the x-axis range to 20
+  scale_y_log10(labels = label_scientific(accuracy = 1)) +  # Log scale for market cap with custom labels
+  scale_color_brewer(palette = "Spectral") +  # A color palette that provides good contrast
+  labs(
+    title = "Market Cap vs. Cumulative Log Returns for Cryptocurrencies (HD2024)",
+    x = "Cumulative Log Return",
+    y = "Market Capitalization",
+    color = "Market Cap Category",
+    size = "Market Cap"
+  ) +
+  theme_minimal() +
+  theme(
+    plot.background = element_rect(fill = "black", color = "black"), # Set the plot background to black
+    panel.background = element_rect(fill = "black", color = "black"), # Set the panel background to black
+    text = element_text(color = "white"), # Change text color to white for visibility
+    axis.text = element_text(color = "white"), # Change axis text color to white
+    axis.title = element_text(color = "white"), # Change axis title color to white
+    legend.title = element_text(color = "white"), # Change legend title color to white
+    legend.text = element_text(color = "white") # Change legend text color to white
+  )+
+  theme(
+    axis.text.y = element_text(angle = 0)  # Ensure y-axis labels are not angled
+  )
+
+# Print the scatter plot
+print(scatter_plot)
+
+```
