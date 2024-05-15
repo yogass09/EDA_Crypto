@@ -16,108 +16,23 @@ Mcapdf<- read_csv("~/GitHub/EDA_Crypto/EDA_Crypto/Crypto_Hist_Ret_Log_Rank_Code.
 Mcapdf$market_cap <- as.numeric(Mcapdf$market_cap)
 
 # Define the breaks for market cap
-breaks <- c(0, 50e6, 100e6, 500e6, 1e9, 10e9, 50e9, 100e9, 200e9, 500e9, 1e12, Inf)  # Ends are inclusive
+breaks <- c(0, 1e9, 10e9, 100e9, Inf)  # Ends are inclusive
 
-# Label for each segment
-labels <- c("Under 50M", "Under 100M", "Under 500M", "Under 1B", "Under 10B", "Under 50B", 
-            "Under 100B", "Under 200B", "Under 500B", "Under 1T", "Above 1T")
+# Label for each segment with < signs
+labels <- c("<1B", "<10B", "<100B", ">100B")
 
 # Create a new column for market cap category
-Mcapdf$mcapcat<- cut(Mcapdf$market_cap, breaks = breaks, labels = labels, include.lowest = TRUE)
+Mcapdf$mcapcat <- cut(Mcapdf$market_cap, breaks = breaks, labels = labels, include.lowest = TRUE)
 
 # Print out to check the categorized data
 head(Mcapdf)
 
-```
-
-```{r}
-library(ggplot2)
-library(dplyr)
-
-# Assuming 'date' is already in a suitable date format, and if not, convert it
-Mcapdf$date <- as.Date(Mcapdf$date)
-
-# Filter the data for bitcoin
-bitcoin_data <- Mcapdf %>%
-  filter(slug == "bitcoin")
-
-# Create a line chart
-p <- ggplot(bitcoin_data, aes(x = date, y = market_cap, group = 1, color = mcapcat)) +
-  geom_line() +
-  scale_x_date(date_breaks = "1 year", date_labels = "%Y") +  # Ensure x-axis labels are years
-  labs(title = "Market Capitalization of Bitcoin Over Time",
-       x = "Year",
-       y = "Market Cap",
-       color = "Market Cap Category") +
-  theme_minimal()  # A clean theme for better visualization
-
-# Print the plot
-print(p)
 
 ```
 ```{r}
-library(ggplot2)
-library(dplyr)
 
-# Ensure 'date' is in a date format
-Mcapdf$date <- as.Date(Mcapdf$date)
-
-# Filter the data for the top 10 ranked cryptocurrencies
-top_10_coins_data <- Mcapdf %>%
-  filter(rank >= 1 & rank <= 20)  # Assuming 'rank' indicates the ranking of the cryptocurrencies
-
-# Create a line chart for the top 10 cryptocurrencies
-p <- ggplot(top_10_coins_data, aes(x = date, y = market_cap, group = slug, color = mcapcat)) +
-  geom_line() +
-  scale_x_date(date_breaks = "1 year", date_labels = "%Y") +  # Ensure x-axis labels are years
-  labs(title = "Market Capitalization of Top 10 Cryptocurrencies Over Time",
-       x = "Year",
-       y = "Market Cap",
-       color = "Market Cap Category") +
-  theme_minimal()  # A clean theme for better visualization
-
-# Print the plot
-print(p)
-
+CryptoMasterFile<-Mcapdf
+write.csv(CryptoMasterFile, "CryptoMasterFile.csv", row.names = FALSE)
 ```
-
-```{r}
-library(ggplot2)
-library(dplyr)
-
-library(ggplot2)
-library(dplyr)
-
-# Ensure 'date' is in a date format
-Mcapdf$date <- as.Date(Mcapdf$date)
-
-# Filter the data for the specified rank ranges and create a categorization variable for faceting
-top_coins_data <- Mcapdf %>%
-  filter(rank >= 1 & rank <= 1000) %>%
-  mutate(rank_category = case_when(
-    rank >= 1 & rank <= 10 ~ "Rank 1-10",
-    rank >= 20 & rank <= 100 ~ "Rank 20-100",
-    rank >= 100 & rank <= 350 ~ "Rank 100-350",
-    rank >= 350 & rank <= 1000 ~ "Rank 350-1000"
-  )) %>%
-  filter(!is.na(rank_category))  # Ensure only valid categories are included
-
-# Create a line chart with facets for each rank category
-p <- ggplot(top_coins_data, aes(x = date, y = market_cap, group = slug, color = mcapcat)) +
-  geom_line() +
-  scale_x_date(date_breaks = "1 year", date_labels = "%Y") +  # Format the x-axis labels as years
-  labs(title = "Market Capitalization of Cryptocurrencies Over Time by Rank Category",
-       x = "Year",
-       y = "Market Cap",
-       color = "Market Cap Category") +
-  facet_wrap(~ rank_category, scales = "free_y", ncol = 1) +  # Use facet_wrap to organize the plots
-  theme_minimal()  # Apply a minimal theme for a clean appearance
-
-# Print the plot
-print(p)
-
-
-```
-
 
 

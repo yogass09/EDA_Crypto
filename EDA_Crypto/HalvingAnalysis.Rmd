@@ -54,10 +54,10 @@ print(df_periods)
 ```{r}
 # Assuming df_periods is your data frame
 df_periods$Code <- with(df_periods, paste0(
-  ifelse(Period == "Pre-Bull", "PB", 
-    ifelse(Period == "Crypto Winter", "CW", 
-      ifelse(Period == "Bull Run", "BR", 
-        ifelse(Period == "Halving Day", "HD", "")))), 
+  ifelse(Period == "Pre-Bull", "PreBull", 
+    ifelse(Period == "Crypto Winter", "CryptoWinter", 
+      ifelse(Period == "Bull Run", "BullRun", 
+        ifelse(Period == "Halving Day", "Halvingday", "")))), 
   substr(Halving, 1, 4)
 ))
 
@@ -107,6 +107,6 @@ Crypto_Hist_Ret_Log_Rank_Code <- df_merged
 ```
 
 ```{r}
-#write.csv(Crypto_Hist_Ret_Log_Rank_Code, "Crypto_Hist_Ret_Log_Rank_Code.csv", row.names = FALSE)
+write.csv(Crypto_Hist_Ret_Log_Rank_Code, "Crypto_Hist_Ret_Log_Rank_Code.csv", row.names = FALSE)
 ```
 

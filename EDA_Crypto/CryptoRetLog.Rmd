@@ -16,11 +16,13 @@ library(lubridate)  # for date manipulation
 #Loaded Data 
 library(readr)
 df<- read_csv("~/GitHub/EDA_Crypto/DATA/crypto_hist.csv")
+# Check the structure or a summary of the updated data frame
+str(df)
 ```
 
 ```{r dropping 0 close prices}
 # Subset df_selected to exclude rows where 'close' equals 0
-df <- df[df$close > 0.02, ]
+df <- df[df$close > 0.000000001, ]
 
 # Check the structure or a summary of the updated data frame
 str(df)
@@ -49,7 +51,7 @@ library(dplyr)
 
 # Assuming your dataframe is named df
 df_selected <- df %>%
-  select(slug, symbol, date, open, close, market_cap, rank)
+  select( symbol, date, open, close, market_cap, rank,)
 
 # Convert 'date' from character to Date format if necessary
 df_selected$date <- as.Date(df_selected$date, format = "%d/%m/%Y")
@@ -71,17 +73,17 @@ df_selected <- df_selected %>%
   ungroup()  # Remove the grouping specification for further general operations
 
 
-df_selected <- df_selected %>%
-  group_by(symbol) %>%
-  mutate(
-    ret = round((close - open) / open, 2),  # Calculate and round the ret
+#df_selected <- df_selected %>%
+#  group_by(symbol) %>%
+#  mutate(
+ #   ret = round((close - open) / open, 2),  # Calculate and round the ret
     # Directly calculate cumulative ret without creating adjusted_ret column
-    cum_ret = cumprod(1 + ret) - 1
-  ) %>%
-  ungroup()  # Remove the grouping specification for further general operations
+#    cum_ret = cumprod(1 + ret) - 1
+#  ) %>%
+#  ungroup()  # Remove the grouping specification for further general operations
 
 # Optionally, round cum_ret to 2 decimal places if needed for consistency
-df_selected$cum_ret <- round(df_selected$cum_ret, 2)
+#df_selected$cum_ret <- round(df_selected$cum_ret, 2)
 
 
 
@@ -104,18 +106,18 @@ df_selected <- df_selected %>%
   ungroup()  # optional: ungroup after the mutation if no further grouped operations
 
 # Assuming df_selected already includes the 'log_ret' calculations
-df_selected <- df_selected %>%
-  group_by(symbol) %>%
-  arrange(date) %>%  # Ensure the data is sorted by date
-  mutate(
-    cum_log_ret = cumsum(log_ret)  # Calculate cumulative logarithmic ret
-  ) %>%
-  ungroup()  # Optional: ungroup if no further grouped operations are needed
+#df_selected <- df_selected %>%
+#  group_by(symbol) %>%
+#  arrange(date) %>%  # Ensure the data is sorted by date
+#  mutate(
+#    cum_log_ret = cumsum(log_ret)  # Calculate cumulative logarithmic ret
+#  ) %>%
+#  ungroup()  # Optional: ungroup if no further grouped operations are needed
 
 # Optionally, round cum_ret to 2 decimal places if needed for consistency
 df_selected$log_ret <- round(df_selected$log_ret, 2)
 # Optionally, round cum_ret to 2 decimal places if needed for consistency
-df_selected$cum_log_ret <- round(df_selected$cum_log_ret, 2)
+#df_selected$cum_log_ret <- round(df_selected$cum_log_ret, 2)
 
 # Print the updated data frame to verify the results
 print(df_selected)
@@ -123,9 +125,12 @@ print(df_selected)
 ```
 
 ```{r Check for NA/Inf}
+df_selected <- df_selected %>%
+  filter(is.finite(log_ret), is.finite(ret))
+
 # Check a specific column, e.g., 'log_ret'
 sum(is.na(df_selected$log_ret))
-sum(is.na(df_selected$ret))
+sum(is.infinite(df_selected$ret))
 sum(is.infinite(df_selected$log_ret))
 ```
 ```{r Drop Na/Inf}
@@ -140,12 +145,10 @@ CryptoHistRt<-df_selected
 
 
 ```{r}
-#write.csv(df_selected, "Crypto_Hist_LogRt.csv", row.names = FALSE)
+write.csv(df_selected, "Crypto_Hist_LogRt.csv", row.names = FALSE)
 ```
 
-```{r making new df by transposing log ret and ret}
-#for later when we have all the other data pct change as well as log date structureed like MoM or DoD
-```
+
 
 
 

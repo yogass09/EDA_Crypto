@@ -757,6 +757,11 @@ print(p)
 
 ```
 
+```{r}
+write.csv(Mcapdf,"CryptoMasterFile.csv", row.names = FALSE)
+```
+
+
 #### Market Capitalization Over Time:
 
 All Top 10 Cryptocurrencies vs. Bitcoin: The first two plots compare the overall market cap trends of the top 10 cryptocurrencies and Bitcoin specifically. The visualization of Bitcoin shows more pronounced growth phases and stabilizations, indicating its dominant and less volatile role compared to other cryptocurrencies which have more fluctuating trajectories. This can suggest a lower risk in Bitcoin compared to other, less established cryptocurrencies.
