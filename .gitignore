@@ -15,3 +15,13 @@ EDA_Crypto/Crypto_Hist_LogRt.csv
 *.csv
 *.csv
 *.csv
+*.csv
+EDA_Crypto/Crypto_Hist_Ret_Log_Rank_Code.csv
+EDA_Crypto/Crypto_Hist_LogRt.csv
+EDA_Crypto/HalvingDataKey.csv
+EDA_Crypto/matketseg.csv
+EDA_Crypto/Crypto_Hist_Ret_Log_Rank_Code.csv
+EDA_Crypto/matketseg.csv
+EDA_Crypto/HalvingDataKey.csv
+EDA_Crypto/CryptoMasterFile.csv
+EDA_Crypto/Crypto_Hist_Ret_Log_Rank_Code.csv
